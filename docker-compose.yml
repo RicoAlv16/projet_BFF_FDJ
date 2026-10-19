@@ -1,0 +1,132 @@
+#version: '3.8'
+
+services:
+  # ============================================================================
+  # 1. Base Relationnelle & Transactionnelle (Tickets, Matchs, Cotes, Audit ANJ)
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: fdj-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: fdj_user
+      POSTGRES_PASSWORD: fdj_secret
+      POSTGRES_DB: fdj_sportsbook
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fdj_user -d fdj_sportsbook"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fdj-network
+
+  # ============================================================================
+  # 2. Cache Haute Performance & Pub/Sub (Cotes en direct, Sessions, Limites)
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: fdj-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fdj-network
+
+  # ============================================================================
+  # 3. Backbone de Streaming Événementiel (Apache Kafka en mode KRaft)
+  # ============================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: fdj-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - fdj-network
+
+  # ============================================================================
+  # 4. Base Documentaire CMS (Bannières Marketing, Promotions, Vitrine Point de Vente)
+  # ============================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: fdj-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: fdj_cms
+    volumes:
+      - mongo_data:/data/db
+      - ./infra/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fdj-network
+
+  # ============================================================================
+  # 5. Interface Graphique Kafka (Pour voir les messages passer sur les topics)
+  # ============================================================================
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: fdj-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: fdj-local-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      - kafka
+    networks:
+      - fdj-network
+
+# Définition des volumes persistants
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+  mongo_data:
+
+# Réseau interne partagé par tous les conteneurs
+networks:
+  fdj-network:
+    driver: bridge

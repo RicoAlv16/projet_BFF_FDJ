@@ -1,0 +1,95 @@
+<div class="min-h-screen flex flex-col bg-[#070b14] text-slate-100 selection:bg-cyan-500 selection:text-black">
+  
+  <!-- 1. Top Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- 2. Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+    <!-- Hero / Headline Bar -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-cyan-950/40 border border-slate-800/80">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-900/60 text-blue-300 border border-blue-700/50 font-mono">
+            FDJ BU SPORT • PROJET BFF
+          </span>
+          <span class="text-xs text-slate-500">•</span>
+          <span class="text-xs text-cyan-400 font-semibold flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            Supervision Réseau & Streaming
+          </span>
+        </div>
+        <h1 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+          Observateur d'Architecture Événementielle & Paris en Direct
+        </h1>
+        <p class="text-xs text-slate-400 max-w-3xl">
+          Visualisez en direct comment les cotes générées par le <strong class="text-slate-200">Core Java</strong> transitent par <strong class="text-cyan-400">Kafka</strong>, sont ingérées par le <strong class="text-rose-400">Worker NestJS</strong> dans <strong class="text-amber-400">Redis</strong>, et sont poussées en temps réel par le <strong class="text-emerald-400">BFF</strong> aux clients web et mobiles.
+        </p>
+      </div>
+
+      <!-- Quick Metrics Pill Grid -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-center font-mono">
+          <div class="text-[10px] text-slate-500 uppercase">Événements</div>
+          <div class="text-base font-black text-cyan-400">{{ service.eventCount() }}</div>
+        </div>
+        <div class="px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-center font-mono">
+          <div class="text-[10px] text-slate-500 uppercase">Latence WS</div>
+          <div class="text-base font-black text-emerald-400">{{ service.wsLatency() }} ms</div>
+        </div>
+        <div class="px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-center font-mono">
+          <div class="text-[10px] text-slate-500 uppercase">Broker Kafka</div>
+          <div class="text-base font-black text-blue-400">KRaft</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Pipeline Événementiel Interactif (Visualisation de A à Z) -->
+    <app-pipeline-visualizer></app-pipeline-visualizer>
+
+    <!-- 4. Console de Déclenchement / Simulation de Test (Boutons 1-clic) -->
+    <app-simulation-console></app-simulation-console>
+
+    <!-- 5. Grille Principale (Match Live & Cotes + Ticket & Chronologie) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- Colonne Gauche (7 cols / 12) : Centre du Match & Cotes en Direct -->
+      <div class="lg:col-span-8 space-y-6">
+        <app-live-match-center></app-live-match-center>
+      </div>
+
+      <!-- Colonne Droite (4 cols / 12) : Coupon de Paris & Timeline des Événements -->
+      <div class="lg:col-span-4 space-y-6">
+        <!-- Ticket de Paris -->
+        <app-bet-slip></app-bet-slip>
+
+        <!-- Chronologie Événements de Match -->
+        <app-match-events-timeline></app-match-events-timeline>
+      </div>
+
+    </div>
+
+    <!-- 6. Terminal de Télémétrie et Flux Brut Kafka / WebSocket -->
+    <app-telemetry-terminal></app-telemetry-terminal>
+
+  </main>
+
+  <!-- 7. Footer Républicain & FDJ -->
+  <footer class="border-t border-slate-900 bg-[#050811] py-6 px-4 mt-12 text-slate-500 text-xs font-mono">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+      <div>
+        <p class="font-bold text-slate-300">FDJ Parions Sport © 2026 • BU Sport & Paris en Direct</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Architecture Event-Driven distribuée haute performance certifiée ANJ</p>
+      </div>
+      <div class="flex items-center gap-3 text-[10px] text-slate-400 flex-wrap justify-center">
+        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">Spring Boot Java 21</span>
+        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">Apache Kafka 7.6 KRaft</span>
+        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">NestJS Worker Microservice</span>
+        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">Redis 7 Pub/Sub</span>
+        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">BFF NestJS Socket.IO</span>
+        <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">Angular 21 Signals</span>
+      </div>
+    </div>
+  </footer>
+
+</div>

@@ -1,0 +1,52 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: sports-engine-service
+
+  # ============================================================================
+  # 1. Connexion PostgreSQL (Base FDJ)
+  # ============================================================================
+  datasource:
+    url: jdbc:postgresql://localhost:5433/fdj_sportsbook
+    username: fdj_user
+    password: fdj_secret
+    driver-class-name: org.postgresql.Driver
+
+  # ============================================================================
+  # 2. Hibernate JPA (Mode Validation stricte & Dialecte PostgreSQL forcé)
+  # ============================================================================
+  jpa:
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ============================================================================
+  # 3. Apache Kafka (Envoi des flux d'événements)
+  # ============================================================================
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+# ==============================================================================
+# 4. Paramètres Métiers FDJ (Noms des Topics Kafka & Simulateur Live)
+# ==============================================================================
+app:
+  kafka:
+    topics:
+      odds-updated: sports.odds.updated
+      match-events: sports.match.events
+  simulation:
+    enabled: true
+    interval-ms: 4000 # Fluctuation / battement de cotes toutes les 4 secondes
